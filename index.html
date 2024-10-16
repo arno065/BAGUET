@@ -12,6 +12,22 @@
             margin: 0;
             padding: 0;
             font-family: Arial, sans-serif;
+            background-color: #FFF8E7;
+        }
+        #app {
+            display: flex;
+            height: 100%;
+        }
+        #sidebar {
+            width: 300px;
+            background-color: #F5DEB3;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        #main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
         }
         #map {
             height: 60%;
@@ -21,12 +37,14 @@
             height: 40%;
             overflow-y: auto;
             padding: 10px;
+            background-color: #FFF8E7;
         }
-        .distributor-item {
-            background-color: #f0f0f0;
+        .distributor-item, .sidebar-section {
+            background-color: #FFEFD5;
             margin-bottom: 10px;
-            padding: 10px;
-            border-radius: 5px;
+            padding: 15px;
+            border-radius: 15px;
+            border: 2px solid #D2691E;
         }
         .stars {
             color: #FFD700;
@@ -52,11 +70,44 @@
         #contextMenu button:hover {
             background-color: #f0f0f0;
         }
+        .favorite {
+            color: gold;
+            cursor: pointer;
+        }
+        #language-select {
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
-    <div id="map"></div>
-    <div id="list"></div>
+    <div id="app">
+        <div id="sidebar">
+            <h2>Préférences</h2>
+            <div class="sidebar-section">
+                <label for="language-select">Langue :</label>
+                <select id="language-select">
+                    <option value="fr">Français</option>
+                    <option value="en">English</option>
+                </select>
+            </div>
+            <div class="sidebar-section">
+                <h3>Favoris</h3>
+                <ul id="favorites-list"></ul>
+            </div>
+            <div class="sidebar-section">
+                <h3>Historique de recherche</h3>
+                <ul id="search-history"></ul>
+            </div>
+            <div class="sidebar-section">
+                <h3>Points de fidélité</h3>
+                <p>Vos points : <span id="loyalty-points">0</span></p>
+            </div>
+        </div>
+        <div id="main-content">
+            <div id="map"></div>
+            <div id="list"></div>
+        </div>
+    </div>
     <div id="contextMenu">
         <button id="centerMapBtn">Centrer la carte ici</button>
         <button id="addDistributorBtn">Ajouter un distributeur ici</button>
@@ -67,16 +118,54 @@
     <script>
         // Données statiques des distributeurs
         const distributors = [
-            { id: 1, name: "Distributeur Boulangerie Paul", lat: 48.8584, lng: 2.2945, address: "123 Rue de Paris", price: 1.20, rating: 4, payment: ["cash", "card"] },
-            { id: 2, name: "Distri-Baguette Express", lat: 48.8738, lng: 2.2950, address: "45 Avenue des Champs-Élysées", price: 1.10, rating: 3, payment: ["cash"] },
-            { id: 3, name: "Le Petit Boulanger Automatique", lat: 48.8600, lng: 2.3400, address: "78 Boulevard Saint-Michel", price: 1.30, rating: 5, payment: ["card"] },
+            { id: 1, name: "Distributeur Boulangerie Paul", lat: 48.8584, lng: 2.2945, address: "123 Rue de Paris", price: 1.20, rating: 4, payment: ["cash", "card"], reviews: [] },
+            { id: 2, name: "Distri-Baguette Express", lat: 48.8738, lng: 2.2950, address: "45 Avenue des Champs-Élysées", price: 1.10, rating: 3, payment: ["cash"], reviews: [] },
+            { id: 3, name: "Le Petit Boulanger Automatique", lat: 48.8600, lng: 2.3400, address: "78 Boulevard Saint-Michel", price: 1.30, rating: 5, payment: ["card"], reviews: [] },
         ];
+
+        let favorites = [];
+        let searchHistory = [];
+        let loyaltyPoints = 0;
+        let currentLanguage = 'fr';
+
+        const translations = {
+            fr: {
+                addReview: "Ajouter un avis",
+                seeReviews: "Voir les avis",
+                favorite: "Favori",
+                viewOnMap: "Voir sur la carte",
+                nearestDistributor: "Le distributeur le plus proche est",
+                meters: "mètres",
+                invalidInput: "Entrée invalide. Veuillez réessayer.",
+                loyaltyPoints: "Points de fidélité",
+                language: "Langue",
+                favorites: "Favoris",
+                searchHistory: "Historique de recherche"
+            },
+            en: {
+                addReview: "Add review",
+                seeReviews: "See reviews",
+                favorite: "Favorite",
+                viewOnMap: "View on map",
+                nearestDistributor: "The nearest distributor is",
+                meters: "meters",
+                invalidInput: "Invalid input. Please try again.",
+                loyaltyPoints: "Loyalty points",
+                language: "Language",
+                favorites: "Favorites",
+                searchHistory: "Search history"
+            }
+        };
 
         // Initialisation de la carte
         const map = L.map('map').setView([48.8566, 2.3522], 12);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
+
+        function translate(key) {
+            return translations[currentLanguage][key] || key;
+        }
 
         // Fonction pour ajouter un marqueur
         function addMarker(distributor) {
@@ -86,7 +175,9 @@
                 ${distributor.address}<br>
                 Prix : ${distributor.price.toFixed(2)}€<br>
                 Note : ${getStars(distributor.rating)}<br>
-                Paiement : ${getPaymentIcons(distributor.payment)}
+                Paiement : ${getPaymentIcons(distributor.payment)}<br>
+                <button onclick="addReview(${distributor.id})">${translate('addReview')}</button>
+                <button onclick="seeReviews(${distributor.id})">${translate('seeReviews')}</button>
             `);
         }
 
@@ -112,12 +203,17 @@
                 const item = document.createElement('div');
                 item.className = 'distributor-item';
                 item.innerHTML = `
-                    <h3>${distributor.name}</h3>
+                    <h3>${distributor.name} 
+                        <i class="fas fa-star favorite" onclick="toggleFavorite(${distributor.id})" 
+                           style="color: ${favorites.includes(distributor.id) ? 'gold' : 'grey'}"></i>
+                    </h3>
                     <p>${distributor.address}</p>
                     <p>Prix : ${distributor.price.toFixed(2)}€</p>
                     <p>Note : ${getStars(distributor.rating)}</p>
                     <p>Paiement : ${getPaymentIcons(distributor.payment)}</p>
-                    <button onclick="centerMap(${distributor.lat}, ${distributor.lng})">Voir sur la carte</button>
+                    <button onclick="centerMap(${distributor.lat}, ${distributor.lng})">${translate('viewOnMap')}</button>
+                    <button onclick="addReview(${distributor.id})">${translate('addReview')}</button>
+                    <button onclick="seeReviews(${distributor.id})">${translate('seeReviews')}</button>
                 `;
                 listElement.appendChild(item);
             });
@@ -160,11 +256,14 @@
                     address: address,
                     price: price,
                     rating: rating,
-                    payment: paymentMethods
+                    payment: paymentMethods,
+                    reviews: []
                 };
                 distributors.push(newDistributor);
                 addMarker(newDistributor);
                 displayList();
+            } else {
+                alert(translate('invalidInput'));
             }
             hideContextMenu();
         });
@@ -180,8 +279,9 @@
                 }
             });
             if (nearest) {
-                alert(`Le distributeur le plus proche est "${nearest.name}" à ${Math.round(minDistance)} mètres.`);
+                alert(`${translate('nearestDistributor')} "${nearest.name}" à ${Math.round(minDistance)} ${translate('meters')}.`);
                 centerMap(nearest.lat, nearest.lng);
+                addToSearchHistory(nearest.name);
             }
             hideContextMenu();
         });
@@ -193,9 +293,102 @@
         // Fermer le menu contextuel en cliquant ailleurs sur la carte
         map.on('click', hideContextMenu);
 
+        function toggleFavorite(id) {
+            const index = favorites.indexOf(id);
+            if (index > -1) {
+                favorites.splice(index, 1);
+            } else {
+                favorites.push(id);
+                loyaltyPoints += 10;
+                updateLoyaltyPoints();
+            }
+            displayList();
+            updateFavoritesList();
+        }
+
+        function updateFavoritesList() {
+            const favoritesList = document.getElementById('favorites-list');
+            favoritesList.innerHTML = '';
+            favorites.forEach(id => {
+                const distributor = distributors.find(d => d.id === id);
+                if (distributor) {
+                    const li = document.createElement('li');
+                    li.textContent = distributor.name;
+                    favoritesList.appendChild(li);
+                }
+            });
+        }
+
+        function addToSearchHistory(name) {
+            searchHistory.unshift(name);
+            if (searchHistory.length > 5) {
+                searchHistory.pop();
+            }
+            updateSearchHistory();
+        }
+
+        function updateSearchHistory() {
+            const historyList = document.getElementById('search-history');
+            historyList.innerHTML = '';
+            searchHistory.forEach(name => {
+                const li = document.createElement('li');
+                li.textContent = name;
+                historyList.appendChild(li);
+            });
+        }
+
+        function updateLoyaltyPoints() {
+            document.getElementById('loyalty-points').textContent = loyaltyPoints;
+        }
+
+        function addReview(id) {
+            const review = prompt("Ajoutez votre avis :");
+            if (review) {
+                const distributor = distributors.find(d => d.id === id);
+                distributor.reviews.push(review);
+                loyaltyPoints += 5;
+                updateLoyaltyPoints();
+            }
+        }
+
+        function seeReviews(id) {
+            const distributor = distributors.find(d => d.id === id);
+            if (distributor.reviews.length > 0) {
+                alert(distributor.reviews.join('\n\n'));
+            } else {
+                alert("Aucun avis pour le moment.");
+            }
+        }
+
+        document.getElementById('language-select').addEventListener('change', function(e) {
+            currentLanguage = e.target.value;
+            updateLanguage();
+        });
+
+        function updateLanguage() {
+            document.querySelector('label[for="language-select"]').textContent = translate('language') + ' :';
+            document.querySelector('.sidebar-section h3:nth-of-type(1)').textContent = translate('favorites');
+            document.querySelector('.sidebar-section h3:nth-of-type(2)').textContent = translate('searchHistory');
+            document.querySelector('.sidebar-section h3:nth-of-type(3)').textContent = translate('loyaltyPoints');
+            document.getElementById('centerMapBtn').textContent = translate('centerMapBtn');
+            document.getElementById('addDistributorBtn').textContent = translate('addDistributorBtn');
+            document.getElementById('findNearestBtn').textContent = translate('findNearestBtn');
+            displayList();
+            updateFavoritesList();
+            updateSearchHistory();
+        }
+
         // Initialisation
-        distributors.forEach(addMarker);
-        displayList();
+        function init() {
+            distributors.forEach(addMarker);
+            displayList();
+            updateFavoritesList();
+            updateSearchHistory();
+            updateLoyaltyPoints();
+            updateLanguage();
+        }
+
+        init();
     </script>
 </body>
 </html>
