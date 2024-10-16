@@ -27,11 +27,37 @@
             padding: 10px;
             border-radius: 5px;
         }
+        #contextMenu {
+            display: none;
+            position: absolute;
+            background-color: white;
+            border: 1px solid #ccc;
+            padding: 5px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+        }
+        #contextMenu button {
+            display: block;
+            width: 100%;
+            padding: 5px;
+            margin: 2px 0;
+            background: none;
+            border: none;
+            text-align: left;
+            cursor: pointer;
+        }
+        #contextMenu button:hover {
+            background-color: #f0f0f0;
+        }
     </style>
 </head>
 <body>
     <div id="map"></div>
     <div id="list"></div>
+    <div id="contextMenu">
+        <button id="centerMapBtn">Centrer la carte ici</button>
+        <button id="addDistributorBtn">Ajouter un distributeur ici</button>
+        <button id="findNearestBtn">Trouver le distributeur le plus proche</button>
+    </div>
 
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script>
@@ -57,6 +83,7 @@
         // Fonction pour afficher la liste des distributeurs
         function displayList() {
             const listElement = document.getElementById('list');
+            listElement.innerHTML = ''; // Clear existing list
             distributors.forEach(distributor => {
                 const item = document.createElement('div');
                 item.className = 'distributor-item';
@@ -73,6 +100,64 @@
         function centerMap(lat, lng) {
             map.setView([lat, lng], 16);
         }
+
+        // Gestion du menu contextuel
+        let contextMenuLatLng;
+
+        map.on('contextmenu', function(e) {
+            contextMenuLatLng = e.latlng;
+            const contextMenu = document.getElementById('contextMenu');
+            contextMenu.style.display = 'block';
+            contextMenu.style.left = e.originalEvent.pageX + 'px';
+            contextMenu.style.top = e.originalEvent.pageY + 'px';
+        });
+
+        document.getElementById('centerMapBtn').addEventListener('click', function() {
+            map.setView(contextMenuLatLng, map.getZoom());
+            hideContextMenu();
+        });
+
+        document.getElementById('addDistributorBtn').addEventListener('click', function() {
+            const name = prompt("Nom du nouveau distributeur :");
+            const address = prompt("Adresse du nouveau distributeur :");
+            if (name && address) {
+                const newDistributor = {
+                    id: distributors.length + 1,
+                    name: name,
+                    lat: contextMenuLatLng.lat,
+                    lng: contextMenuLatLng.lng,
+                    address: address
+                };
+                distributors.push(newDistributor);
+                addMarker(newDistributor);
+                displayList();
+            }
+            hideContextMenu();
+        });
+
+        document.getElementById('findNearestBtn').addEventListener('click', function() {
+            let nearest = null;
+            let minDistance = Infinity;
+            distributors.forEach(distributor => {
+                const distance = map.distance(contextMenuLatLng, [distributor.lat, distributor.lng]);
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    nearest = distributor;
+                }
+            });
+            if (nearest) {
+                alert(`Le distributeur le plus proche est "${nearest.name}" à ${Math.round(minDistance)} mètres.`);
+                centerMap(nearest.lat, nearest.lng);
+            }
+            hideContextMenu();
+        });
+
+        function hideContextMenu() {
+            document.getElementById('contextMenu').style.display = 'none';
+        }
+
+        // Fermer le menu contextuel en cliquant ailleurs sur la carte
+        map.on('click', hideContextMenu);
 
         // Initialisation
         distributors.forEach(addMarker);
