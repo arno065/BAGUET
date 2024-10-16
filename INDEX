@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Localisateur de Distributeurs de Baguettes</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        #map {
+            height: 70%;
+            width: 100%;
+        }
+        #list {
+            height: 30%;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        .distributor-item {
+            background-color: #f0f0f0;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <div id="list"></div>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        // Données statiques des distributeurs
+        const distributors = [
+            { id: 1, name: "Distributeur Boulangerie Paul", lat: 48.8584, lng: 2.2945, address: "123 Rue de Paris" },
+            { id: 2, name: "Distri-Baguette Express", lat: 48.8738, lng: 2.2950, address: "45 Avenue des Champs-Élysées" },
+            { id: 3, name: "Le Petit Boulanger Automatique", lat: 48.8600, lng: 2.3400, address: "78 Boulevard Saint-Michel" },
+        ];
+
+        // Initialisation de la carte
+        const map = L.map('map').setView([48.8566, 2.3522], 12);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Fonction pour ajouter un marqueur
+        function addMarker(distributor) {
+            const marker = L.marker([distributor.lat, distributor.lng]).addTo(map);
+            marker.bindPopup(`<b>${distributor.name}</b><br>${distributor.address}`);
+        }
+
+        // Fonction pour afficher la liste des distributeurs
+        function displayList() {
+            const listElement = document.getElementById('list');
+            distributors.forEach(distributor => {
+                const item = document.createElement('div');
+                item.className = 'distributor-item';
+                item.innerHTML = `
+                    <h3>${distributor.name}</h3>
+                    <p>${distributor.address}</p>
+                    <button onclick="centerMap(${distributor.lat}, ${distributor.lng})">Voir sur la carte</button>
+                `;
+                listElement.appendChild(item);
+            });
+        }
+
+        // Fonction pour centrer la carte sur un distributeur
+        function centerMap(lat, lng) {
+            map.setView([lat, lng], 16);
+        }
+
+        // Initialisation
+        distributors.forEach(addMarker);
+        displayList();
+    </script>
+</body>
+</html>
