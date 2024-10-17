@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BAGUET FINDER - Localisateur de Distributeurs de Baguettes</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBxpBRfQPkXlbkX7Gg660_q6ueIjA9ktFs"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBxpBRfQPkXlbkX7Gg660_q6ueIjA9ktFs&libraries=geometry"></script>
     <style>
         body, html {
             height: 100%;
@@ -25,27 +25,33 @@
             height: 100%;
         }
         #sidebar {
-            width: 300px;
+            width: 400px;
             background-color: #F5DEB3;
             padding: 20px;
             overflow-y: auto;
-        }
-        #main-content {
-            flex-grow: 1;
             display: flex;
             flex-direction: column;
         }
+        #preferences {
+            background-color: #FFEFD5;
+            padding: 15px;
+            border-radius: 15px;
+            border: 2px solid #D2691E;
+            margin-bottom: 20px;
+        }
+        #distributors-list {
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+        #map-container {
+            flex-grow: 1;
+            position: relative;
+        }
         #map {
-            height: 60%;
+            height: 100%;
             width: 100%;
         }
-        #list {
-            height: 40%;
-            overflow-y: auto;
-            padding: 10px;
-            background-color: #FFF8E7;
-        }
-        .distributor-item, .sidebar-section {
+        .distributor-item {
             background-color: #FFEFD5;
             margin-bottom: 10px;
             padding: 15px;
@@ -83,32 +89,6 @@
         #language-select {
             margin-bottom: 10px;
         }
-        .tab {
-            overflow: hidden;
-            border: 1px solid #ccc;
-            background-color: #f1f1f1;
-        }
-        .tab button {
-            background-color: inherit;
-            float: left;
-            border: none;
-            outline: none;
-            cursor: pointer;
-            padding: 14px 16px;
-            transition: 0.3s;
-        }
-        .tab button:hover {
-            background-color: #ddd;
-        }
-        .tab button.active {
-            background-color: #ccc;
-        }
-        .tabcontent {
-            display: none;
-            padding: 6px 12px;
-            border: 1px solid #ccc;
-            border-top: none;
-        }
         .status-available {
             color: green;
         }
@@ -118,61 +98,50 @@
         .status-empty {
             color: orange;
         }
+        #add-distributor-form {
+            margin-bottom: 20px;
+        }
+        #add-distributor-form input,
+        #add-distributor-form select {
+            width: 100%;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
     <div id="app">
         <div id="sidebar">
-            <h2>Préférences</h2>
-            <div class="sidebar-section">
+            <div id="preferences">
+                <h2>Préférences</h2>
                 <label for="language-select">Langue :</label>
                 <select id="language-select">
                     <option value="fr">Français</option>
                     <option value="en">English</option>
                 </select>
-            </div>
-            <div class="sidebar-section">
                 <h3>Favoris</h3>
                 <ul id="favorites-list"></ul>
-            </div>
-            <div class="sidebar-section">
                 <h3>Historique de recherche</h3>
                 <ul id="search-history"></ul>
-            </div>
-            <div class="sidebar-section">
                 <h3>Points de fidélité</h3>
                 <p>Vos points : <span id="loyalty-points">0</span></p>
             </div>
-        </div>
-        <div id="main-content">
-            <div class="tab">
-                <button class="tablinks" onclick="openTab(event, 'MapTab')" id="defaultOpen">Carte</button>
-                <button class="tablinks" onclick="openTab(event, 'ListTab')">Liste</button>
-                <button class="tablinks" onclick="openTab(event, 'AddTab')">Ajouter un distributeur</button>
-            </div>
-            <div id="MapTab" class="tabcontent">
-                <div id="map"></div>
-            </div>
-            <div id="ListTab" class="tabcontent">
-                <div id="list"></div>
-            </div>
-            <div id="AddTab" class="tabcontent">
+            <div id="add-distributor-form">
                 <h3>Ajouter un nouveau distributeur</h3>
-                <form id="add-distributor-form">
-                    <label for="new-name">Nom :</label>
-                    <input type="text" id="new-name" required><br>
-                    <label for="new-address">Adresse :</label>
-                    <input type="text" id="new-address" required><br>
-                    <label for="new-price">Prix :</label>
-                    <input type="number" id="new-price" step="0.01" required><br>
-                    <label for="new-payment">Méthode de paiement :</label>
+                <form id="new-distributor-form">
+                    <input type="text" id="new-name" placeholder="Nom" required>
+                    <input type="text" id="new-address" placeholder="Adresse" required>
+                    <input type="number" id="new-price" step="0.01" placeholder="Prix" required>
                     <select id="new-payment" multiple required>
                         <option value="cash">Espèces</option>
                         <option value="card">Carte</option>
-                    </select><br>
+                    </select>
                     <button type="submit">Soumettre pour modération</button>
                 </form>
             </div>
+            <div id="distributors-list"></div>
+        </div>
+        <div id="map-container">
+            <div id="map"></div>
         </div>
     </div>
     <div id="contextMenu">
@@ -300,7 +269,7 @@
         }
 
         function displayList() {
-            const listElement = document.getElementById('list');
+            const listElement = document.getElementById('distributors-list');
             listElement.innerHTML = '';
             distributors.forEach(distributor => {
                 const item = document.createElement('div');
@@ -371,26 +340,25 @@
             };
 
             document.getElementById('findNearestBtn').onclick = function() {
-                let nearest = null;
-                let minDistance = Infinity;
-                distributors.forEach(distributor => {
-                    const distance = google.maps.geometry.spherical.computeDistanceBetween(
-                        latLng,
-                        new google.maps.LatLng(distributor.lat, distributor.lng)
-                    );
-                    if (distance < minDistance) {
-                        minDistance = distance;
-                        nearest = distributor;
-                    }
-                });
-                if (nearest) {
-                    alert(`${translate('nearestDistributor')} "${nearest.name}" à ${Math.round(minDistance)} ${translate('meters')}.`);
-                    centerMap(nearest.lat, nearest.lng);
-                    addToSearchHistory(nearest.name);
+            let nearest = null;
+            let minDistance = Infinity;
+            distributors.forEach(distributor => {
+                const distance = google.maps.geometry.spherical.computeDistanceBetween(
+                    latLng,
+                    new google.maps.LatLng(distributor.lat, distributor.lng)
+                );
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    nearest = distributor;
                 }
-                hideContextMenu();
-            };
-        }
+            });
+            if (nearest) {
+                alert(`${translate('nearestDistributor')} "${nearest.name}" à ${Math.round(minDistance)} ${translate('meters')}.`);
+                centerMap(nearest.lat, nearest.lng);
+                addToSearchHistory(nearest.name);
+            }
+            hideContextMenu();
+        };
 
         function hideContextMenu() {
             document.getElementById('contextMenu').style.display = 'none';
@@ -470,9 +438,9 @@
 
         function updateLanguage() {
             document.querySelector('label[for="language-select"]').textContent = translate('language') + ' :';
-            document.querySelector('.sidebar-section h3:nth-of-type(1)').textContent = translate('favorites');
-            document.querySelector('.sidebar-section h3:nth-of-type(2)').textContent = translate('searchHistory');
-            document.querySelector('.sidebar-section h3:nth-of-type(3)').textContent = translate('loyaltyPoints');
+            document.querySelector('#preferences h3:nth-of-type(1)').textContent = translate('favorites');
+            document.querySelector('#preferences h3:nth-of-type(2)').textContent = translate('searchHistory');
+            document.querySelector('#preferences h3:nth-of-type(3)').textContent = translate('loyaltyPoints');
             document.getElementById('centerMapBtn').textContent = translate('centerMapBtn');
             document.getElementById('addDistributorBtn').textContent = translate('addDistributorBtn');
             document.getElementById('findNearestBtn').textContent = translate('findNearestBtn');
@@ -485,21 +453,7 @@
             return translations[currentLanguage][key] || key;
         }
 
-        function openTab(evt, tabName) {
-            var i, tabcontent, tablinks;
-            tabcontent = document.getElementsByClassName("tabcontent");
-            for (i = 0; i < tabcontent.length; i++) {
-                tabcontent[i].style.display = "none";
-            }
-            tablinks = document.getElementsByClassName("tablinks");
-            for (i = 0; i < tablinks.length; i++) {
-                tablinks[i].className = tablinks[i].className.replace(" active", "");
-            }
-            document.getElementById(tabName).style.display = "block";
-            evt.currentTarget.className += " active";
-        }
-
-        document.getElementById("add-distributor-form").addEventListener("submit", function(e) {
+        document.getElementById("new-distributor-form").addEventListener("submit", function(e) {
             e.preventDefault();
             const name = document.getElementById("new-name").value;
             const address = document.getElementById("new-address").value;
@@ -513,6 +467,23 @@
             this.reset();
         });
 
+        // Ajout de distributeurs de baguettes en Mayenne
+        const mayenneDistributors = [
+            { id: 4, name: "Baguet'Express Laval", lat: 48.0706, lng: -0.7724, address: "22 Rue de la Paix, 53000 Laval", price: 1.10, rating: 4, payment: ["cash", "card"], reviews: [], status: "available" },
+            { id: 5, name: "Le Fournil Automatique", lat: 48.1181, lng: -0.7107, address: "5 Place du Marché, 53100 Mayenne", price: 1.00, rating: 3, payment: ["cash"], reviews: [], status: "available" },
+            { id: 6, name: "Distri-Pain Château-Gontier", lat: 47.8284, lng: -0.7064, address: "10 Avenue Carnot, 53200 Château-Gontier", price: 1.20, rating: 4, payment: ["card"], reviews: [], status: "available" },
+            { id: 7, name: "Baguettes 24/7 Evron", lat: 48.1558, lng: -0.4039, address: "2 Place de la Basilique, 53600 Evron", price: 1.15, rating: 5, payment: ["cash", "card"], reviews: [], status: "available" },
+            { id: 8, name: "La Mie Matinale", lat: 48.3047, lng: -0.6174, address: "8 Rue du Pont, 53300 Ambrières-les-Vallées", price: 1.05, rating: 4, payment: ["cash"], reviews: [], status: "available" },
+            { id: 9, name: "Pain Chaud Automatique", lat: 48.2731, lng: -0.3681, address: "15 Grande Rue, 53110 Lassay-les-Châteaux", price: 1.10, rating: 3, payment: ["card"], reviews: [], status: "unavailable" },
+            { id: 10, name: "Croustillant Express", lat: 47.9117, lng: -0.9414, address: "3 Place Hercé, 53500 Ernée", price: 1.20, rating: 4, payment: ["cash", "card"], reviews: [], status: "available" },
+            { id: 11, name: "Le Petit Boulanger", lat: 48.4506, lng: -0.5608, address: "7 Rue du Maine, 53140 Pré-en-Pail-Saint-Samson", price: 1.00, rating: 5, payment: ["cash"], reviews: [], status: "empty" },
+            { id: 12, name: "Baguette Fraîche 53", lat: 47.9667, lng: -0.8833, address: "20 Rue Nationale, 53410 Le Bourgneuf-la-Forêt", price: 1.15, rating: 4, payment: ["card"], reviews: [], status: "available" },
+            { id: 13, name: "La Mie Dorée", lat: 48.3047, lng: -0.9897, address: "1 Place de l'Église, 53120 Gorron", price: 1.10, rating: 3, payment: ["cash", "card"], reviews: [], status: "available" }
+        ];
+
+        // Ajout des nouveaux distributeurs à la liste existante
+        distributors = distributors.concat(mayenneDistributors);
+
         // Initialisation
         function init() {
             initMap();
@@ -521,7 +492,6 @@
             updateSearchHistory();
             updateLoyaltyPoints();
             updateLanguage();
-            document.getElementById("defaultOpen").click();
         }
 
         init();
