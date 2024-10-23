@@ -8,13 +8,26 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <style>
-        body, html {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            font-family: 'Open Dyslexic', Arial, sans-serif;
-            background-color: #D3B12A; /* Couleur de fond inspirée de la baguette */
-        }
+    body, html {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        font-family: 'Open Dyslexic', Arial, sans-serif;
+        background-color: #D3B12A; /* Couleur de fond inspirée de la baguette */
+    }
+    /* Ajoutez d'autres styles ici selon vos besoins */
+
+    .status-available {
+        color: green;
+    }
+    .status-unavailable {
+        color: red;
+    }
+    .status-empty {
+        color: orange;
+    }
+</style>
+
         @font-face {
     font-family: 'OpenDyslexic';
     src: url('fonts/OpenDyslexic-Regular.woff2') format('woff2'),
@@ -202,18 +215,19 @@ body {
         }
 
         function getStatusIcon(status) {
-            const statusClasses = {
-                available: 'status-available',
-                unavailable: 'status-unavailable',
-                empty: 'status-empty'
-            };
-            const statusText = {
-                available: translate('available'),
-                unavailable: translate('unavailable'),
-                empty: translate('empty')
-            };
-            return `<span class="${statusClasses[status]}">${statusText[status]}</span>`;
-        }
+    const statusClasses = {
+        available: 'status-available',
+        unavailable: 'status-unavailable',
+        empty: 'status-empty'
+    };
+    const statusText = {
+        available: translate('available'),
+        unavailable: translate('unavailable'),
+        empty: translate('empty')
+    };
+    return `<span class="${statusClasses[status]}">${statusText[status]}</span>`;
+}
+
 
         function addReview(id) {
             const review = prompt(translate('addReview'));
