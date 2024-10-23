@@ -231,19 +231,18 @@ body {
         };
 
         function initializeMap() {
-            // Initialisation de la carte Leaflet
-            map = L.map('map').setView([48.8566, 2.3522], 12);
+    // Initialisation de la carte Leaflet
+    map = L.map('map').setView([48.8566, 2.3522], 12);
 
-            // Ajout des tuiles OpenStreetMap
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            }).addTo(map);
-            const randomDistributors = generateRandomDistributors(50); // Générer 50 distributeurs aléatoires
+    // Ajout des tuiles OpenStreetMap
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    const randomDistributors = generateRandomDistributors(50); // Générer 50 distributeurs aléatoires
     randomDistributors.forEach(addMarker);
+}
 
-            // Ajout des marqueurs pour chaque distributeur
-            distributors.forEach(addMarker);
-        
 
         function addMarker(distributor) {
             const marker = L.marker([distributor.lat, distributor.lng]).addTo(map)
