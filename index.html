@@ -119,6 +119,11 @@ body {
     </select>
     <button onclick="filterDistributors()">Filtrer</button>
 </div>
+<div id="search-form">
+    <h3>Recherche avancée</h3>
+    <input type="text" id="search-query" placeholder="Code postal ou ville">
+    <button onclick="advancedSearch()">Rechercher</button>
+</div>
 
             <div id="distributors-list"></div>
         </div>
@@ -130,12 +135,12 @@ body {
     <script>
         // Les données des distributeurs avec des photos
         let distributors = [
-            { id: 1, name: "Distributeur Boulangerie Paul", lat: 48.8584, lng: 2.2945, address: "123 Rue de Paris", price: 1.20, rating: 4, payment: ["cash", "card"], reviews: [], status: "available", photo: "https://via.placeholder.com/150" },
-            { id: 2, name: "Distri-Baguette Express", lat: 48.8738, lng: 2.2950, address: "45 Avenue des Champs-Élysées", price: 1.10, rating: 3, payment: ["cash"], reviews: [], status: "unavailable", photo: "https://via.placeholder.com/150" },
-            { id: 3, name: "Le Petit Boulanger Automatique", lat: 48.8600, lng: 2.3400, address: "78 Boulevard Saint-Michel", price: 1.30, rating: 5, payment: ["card"], reviews: [], status: "empty", photo: "https://via.placeholder.com/150" },
-            { id: 4, name: "Baguette d'Or", lat: 48.8566, lng: 2.3522, address: "5 Rue de Rivoli", price: 1.50, rating: 4, payment: ["cash"], reviews: [], status: "available", photo: "https://via.placeholder.com/150" },
-            { id: 5, name: "Boulangerie des Champs", lat: 48.8700, lng: 2.3300, address: "10 Rue des Filles du Calvaire", price: 1.00, rating: 5, payment: ["card"], reviews: [], status: "available", photo: "https://via.placeholder.com/150" }
-        ];
+    { id: 1, name: "Distributeur Boulangerie Paul", lat: 48.8584, lng: 2.2945, address: "123 Rue de Paris", city: "Paris", price: 1.20, rating: 4, payment: ["cash", "card"], reviews: [], status: "available", photo: "https://via.placeholder.com/150" },
+    { id: 2, name: "Distri-Baguette Express", lat: 48.8738, lng: 2.2950, address: "45 Avenue des Champs-Élysées", city: "Paris", price: 1.10, rating: 3, payment: ["cash"], reviews: [], status: "unavailable", photo: "https://via.placeholder.com/150" },
+    { id: 3, name: "Le Petit Boulanger Automatique", lat: 48.8600, lng: 2.3400, address: "78 Boulevard Saint-Michel", city: "Paris", price: 1.30, rating: 5, payment: ["card"], reviews: [], status: "empty", photo: "https://via.placeholder.com/150" },
+    { id: 4, name: "Baguette d'Or", lat: 48.8566, lng: 2.3522, address: "5 Rue de Rivoli", city: "Paris", price: 1.50, rating: 4, payment: ["cash"], reviews: [], status: "available", photo: "https://via.placeholder.com/150" },
+    { id: 5, name: "Boulangerie des Champs", lat: 48.8700, lng: 2.3300, address: "10 Rue des Filles du Calvaire", city: "Paris", price: 1.00, rating: 5, payment: ["card"], reviews: [], status: "available", photo: "https://via.placeholder.com/150" }
+];
 
         let favorites = [];
         let searchHistory = [];
@@ -217,6 +222,32 @@ body {
                 </div>
             `;
         }
+                function advancedSearch() {
+                     const query = document.getElementById('search-query').value.toLowerCase();
+                     const filteredDistributors = distributors.filter(distributor => 
+        distributor.address.toLowerCase().includes(query) || 
+        distributor.city.toLowerCase().includes(query)
+    );
+    // Mettez à jour l'affichage des distributeurs avec filteredDistributors
+    updateDistributorList(filteredDistributors);
+}
+                function updateDistributorList(distributors) {
+                    const distributorList = document.getElementById('distributors-list');
+    distributorList.innerHTML = ''; // Vider la liste actuelle
+
+    distributors.forEach(distributor => {
+                    const listItem = document.createElement('div');
+        listItem.className = 'distributor-item';
+        listItem.innerHTML = `
+            <h4>${distributor.name}</h4>
+            <p>${distributor.address}</p>
+            <p>Prix : ${distributor.price.toFixed(2)}€</p>
+            <p>Note : ${getStars(distributor.rating)}</p>
+            <p>Statut : ${getStatusIcon(distributor.status)}</p>
+        `;
+        distributorList.appendChild(listItem);
+    });
+}
 
                 function getStars(rating) {
             return '<span class="stars">' + '★'.repeat(rating) + '☆'.repeat(5 - rating) + '</span>';
