@@ -243,7 +243,7 @@ body {
 
             // Ajout des marqueurs pour chaque distributeur
             distributors.forEach(addMarker);
-        }
+        
 
         function addMarker(distributor) {
             const marker = L.marker([distributor.lat, distributor.lng]).addTo(map)
