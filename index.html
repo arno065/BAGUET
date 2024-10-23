@@ -177,7 +177,124 @@
     </div>
 
     <script>
-        const distributors = generateRandomDistributors(20); // Générer 20 distributeurs aléatoires
+        <script>
+    const distributors = generateRandomDistributors(50); // Générer 50 distributeurs aléatoires
+
+    let favorites = [];
+    let searchHistory = [];
+    let loyaltyPoints = 0;
+    let currentLanguage = 'fr';
+    let map;
+    let markers = [];
+
+    // Traductions
+    const translations = {
+        fr: {
+            // vos traductions ici...
+        },
+        en: {
+            // vos traductions ici...
+        }
+    };
+
+    function generateRandomDistributors(num) {
+        const distributorNames = [
+            "Boulangerie Artisanale",
+            "Le Fournil du Coin",
+            "Distributeur de Baguettes",
+            "Pain et Gourmandises",
+            "Baguette Express",
+            "La Boulangerie à Emporter",
+            "Le Pain Quotidien",
+            "Distri-Baguette",
+            "Les Délices de France",
+            "Boulangerie Française"
+        ];
+
+        const paymentMethods = [
+            ["cash", "card"],
+            ["cash"],
+            ["card"],
+            ["cash", "card"],
+            ["card"]
+        ];
+
+        const statuses = ["available", "unavailable", "empty"];
+        const latitudes = [
+            48.8566,  // Paris
+            43.6047,  // Toulouse
+            48.5734,  // Strasbourg
+            45.7640,  // Lyon
+            44.8378,  // Bordeaux
+            48.1114,  // Nice
+            43.2931,  // Marseille
+            47.2184,  // Nantes
+            50.6292,  // Lille
+            49.4444   // Metz
+        ];
+        const longitudes = [
+            2.3522,   // Paris
+            1.4442,   // Toulouse
+            7.7521,   // Strasbourg
+            4.8357,   // Lyon
+            -0.5792,  // Bordeaux
+            7.2619,   // Nice
+            5.3745,   // Marseille
+            -1.5532,  // Nantes
+            3.0586,   // Lille
+            6.1715    // Metz
+        ];
+
+        const distributors = [];
+
+        for (let i = 0; i < num; i++) {
+            const randomIndex = Math.floor(Math.random() * distributorNames.length);
+            const randomLatIndex = Math.floor(Math.random() * latitudes.length);
+
+            const distributor = {
+                id: distributors.length + 1,
+                name: distributorNames[randomIndex],
+                lat: latitudes[randomLatIndex] + (Math.random() - 0.5) * 0.05, // Variation aléatoire
+                lng: longitudes[randomLatIndex] + (Math.random() - 0.5) * 0.05, // Variation aléatoire
+                address: `${Math.floor(Math.random() * 100)} Rue ${distributorNames[randomIndex]}`,
+                price: (Math.random() * 2 + 0.5).toFixed(2), // Prix entre 0.5 et 2.5
+                rating: Math.floor(Math.random() * 6), // Évaluation entre 0 et 5
+                payment: paymentMethods[Math.floor(Math.random() * paymentMethods.length)],
+                reviews: [],
+                status: statuses[Math.floor(Math.random() * statuses.length)],
+                photo: "https://via.placeholder.com/150"
+            };
+
+            distributors.push(distributor);
+        }
+
+        return distributors;
+    }
+
+    function initializeMap() {
+        map = L.map('map').setView([46.6034, 1.8883], 5); // Vue centrée sur la France
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        distributors.forEach(distributor => {
+            const marker = L.marker([distributor.lat, distributor.lng]).addTo(map);
+            markers.push(marker);
+
+            marker.on('click', () => {
+                displayDistributorDetails(distributor);
+            });
+        });
+    }
+
+    // Initialiser la carte après le chargement de la page
+    document.addEventListener("DOMContentLoaded", function() {
+        initializeMap();
+    });
+</script>
+
 
         let favorites = [];
         let searchHistory = [];
