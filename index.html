@@ -3,187 +3,348 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Carte des Distributeurs de Baguettes</title>
-    
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    
-    <!-- Google Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Caveat&display=swap" rel="stylesheet">
-    
-    <!-- Styles CSS -->
+    <title>BAGUET FINDER - Localisateur de Distributeurs de Baguettes</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <style>
-        body {
-            background-image: url('images/baguette-background.jpg');
-            background-size: cover;
-            font-family: 'Caveat', cursive;
+        body, html {
+            height: 100%;
             margin: 0;
             padding: 0;
+            font-family: 'Open Dyslexic', Arial, sans-serif;
+            background-color: #D3B12A; /* Couleur de fond inspirée de la baguette */
         }
 
-        header {
-            text-align: center;
+        @font-face {
+            font-family: 'Open Dyslexic';
+            src: url('https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/open-dyslexic-regular.woff') format('woff');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        #app {
+            display: flex;
+            height: 100%;
+        }
+
+        #sidebar {
+            width: 400px;
+            background-color: #F5DEB3; /* Couleur crème pour évoquer la baguette */
             padding: 20px;
-            background-color: #f7e7d4;
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.5);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 2px 15px rgba(0, 0, 0, 0.3);
         }
 
-        h1 {
-            margin: 0;
-            font-size: 48px;
-            color: #8b4513;
+        #preferences {
+            background-color: #FFEFD5; /* Couleur douce */
+            padding: 15px;
+            border-radius: 15px;
+            border: 2px solid #D2691E; /* Marron clair */
+            margin-bottom: 20px;
+        }
+
+        #distributors-list {
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        #map-container {
+            flex-grow: 1;
+            position: relative;
         }
 
         #map {
-            height: 80vh;
-            width: 90vw;
-            margin: 20px auto;
-            border-radius: 30px;
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.5);
+            height: 100%;
+            width: 100%;
         }
 
-        .leaflet-popup-content-wrapper {
-            background: #f7e7d4;
-            border-radius: 10px;
-            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
+        .distributor-item {
+            background-color: #FFEFD5; /* Couleur douce pour chaque distributeur */
+            margin-bottom: 10px;
+            padding: 15px;
+            border-radius: 15px;
+            border: 2px solid #D2691E;
+            transition: transform 0.2s;
         }
 
-        .leaflet-popup-content {
-            font-family: 'Caveat', cursive;
-            text-align: center;
+        .distributor-item:hover {
+            transform: scale(1.02); /* Effet d'agrandissement au survol */
         }
 
-        .leaflet-popup img {
-            border-radius: 10px;
-            width: 200px;
-            height: auto;
+        .stars {
+            color: #FFD700; /* Couleur des étoiles */
         }
 
-        #addDistributor {
-            margin: 20px auto;
-            display: block;
-            padding: 10px 20px;
-            font-size: 24px;
-            background-color: #8b4513;
-            color: #fff;
-            border: none;
-            border-radius: 20px;
+        .favorite {
+            color: gold;
             cursor: pointer;
         }
 
-        #info {
-            text-align: center;
-            font-size: 18px;
-            color: #8b4513;
+        #language-select {
+            margin-bottom: 10px;
         }
 
-        #info-box {
-            display: none;
-            text-align: center;
-            margin: 10px;
+        .status-available {
+            color: green;
         }
 
-        #info-box input {
-            padding: 8px;
-            margin: 5px;
-            border-radius: 10px;
-            border: 1px solid #8b4513;
+        .status-unavailable {
+            color: red;
+        }
+
+        .status-empty {
+            color: orange;
+        }
+
+        #add-distributor-form input,
+        #add-distributor-form select {
+            width: 100%;
+            margin-bottom: 10px;
         }
     </style>
 </head>
 <body>
-    <header>
-        <h1>Carte des Distributeurs de Baguettes</h1>
-    </header>
-
-    <div id="map"></div>
-
-    <button id="addDistributor">Ajouter un Distributeur</button>
-    <div id="info-box">
-        <input type="text" id="dist-name" placeholder="Nom du distributeur" />
-        <input type="text" id="dist-photo" placeholder="Lien de la photo" />
-        <button id="saveDist">Enregistrer</button>
+    <div id="app">
+        <div id="sidebar">
+            <div id="preferences">
+                <h2>Préférences</h2>
+                <label for="language-select">Langue :</label>
+                <select id="language-select">
+                    <option value="fr">Français</option>
+                    <option value="en">English</option>
+                </select>
+                <h3>Favoris</h3>
+                <ul id="favorites-list"></ul>
+                <h3>Historique de recherche</h3>
+                <ul id="search-history"></ul>
+                <h3>Points de fidélité</h3>
+                <p>Vos points : <span id="loyalty-points">0</span></p>
+            </div>
+            <div id="add-distributor-form">
+                <h3>Ajouter un nouveau distributeur</h3>
+                <form id="new-distributor-form">
+                    <input type="text" id="new-name" placeholder="Nom" required>
+                    <input type="text" id="new-address" placeholder="Adresse" required>
+                    <input type="number" id="new-price" step="0.01" placeholder="Prix" required>
+                    <select id="new-payment" multiple required>
+                        <option value="cash">Espèces</option>
+                        <option value="card">Carte</option>
+                    </select>
+                    <input type="text" id="new-photo" placeholder="URL de la photo" required>
+                    <button type="submit">Soumettre pour modération</button>
+                </form>
+            </div>
+            <div id="distributors-list"></div>
+        </div>
+        <div id="map-container">
+            <div id="map"></div>
+        </div>
     </div>
 
-    <div id="info"></div>
-
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
     <script>
-        // Initialisation de la carte centrée sur la France
-        var map = L.map('map').setView([46.603354, 1.888334], 6);
-
-        // Chargement des tuiles OpenStreetMap
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
-
-        // Icone en forme de baguette pour les distributeurs
-        var baguetteIcon = L.icon({
-            iconUrl: 'images/baguette-marker.png',
-            iconSize: [38, 95],
-            iconAnchor: [22, 94],
-            popupAnchor: [-3, -76],
-            shadowUrl: 'images/shadow.png',
-            shadowSize: [68, 95],
-            shadowAnchor: [22, 94]
-        });
-
-        // Liste des distributeurs de baguettes avec leur coordonnées et photo
-        var distributeursBaguettes = [
-            {
-                "name": "Distributeur Paris",
-                "lat": 48.8566,
-                "lon": 2.3522,
-                "photo": "images/distrib1.jpg"
-            },
-            {
-                "name": "Distributeur Lyon",
-                "lat": 45.7640,
-                "lon": 4.8357,
-                "photo": "images/distrib2.jpg"
-            },
-            {
-                "name": "Distributeur Marseille",
-                "lat": 43.2965,
-                "lon": 5.3698,
-                "photo": "images/distrib3.jpg"
-            }
+        // Les données des distributeurs avec des photos
+        let distributors = [
+            { id: 1, name: "Distributeur Boulangerie Paul", lat: 48.8584, lng: 2.2945, address: "123 Rue de Paris", price: 1.20, rating: 4, payment: ["cash", "card"], reviews: [], status: "available", photo: "https://via.placeholder.com/150" },
+            { id: 2, name: "Distri-Baguette Express", lat: 48.8738, lng: 2.2950, address: "45 Avenue des Champs-Élysées", price: 1.10, rating: 3, payment: ["cash"], reviews: [], status: "unavailable", photo: "https://via.placeholder.com/150" },
+            { id: 3, name: "Le Petit Boulanger Automatique", lat: 48.8600, lng: 2.3400, address: "78 Boulevard Saint-Michel", price: 1.30, rating: 5, payment: ["card"], reviews: [], status: "empty", photo: "https://via.placeholder.com/150" },
+            { id: 4, name: "Baguette d'Or", lat: 48.8566, lng: 2.3522, address: "5 Rue de Rivoli", price: 1.50, rating: 4, payment: ["cash"], reviews: [], status: "available", photo: "https://via.placeholder.com/150" },
+            { id: 5, name: "Boulangerie des Champs", lat: 48.8700, lng: 2.3300, address: "10 Rue des Filles du Calvaire", price: 1.00, rating: 5, payment: ["card"], reviews: [], status: "available", photo: "https://via.placeholder.com/150" }
         ];
 
-        // Ajout des distributeurs sur la carte avec des marqueurs et des popups
-        distributeursBaguettes.forEach(function(distributeur) {
-            var marker = L.marker([distributeur.lat, distributeur.lon], {icon: baguetteIcon}).addTo(map);
-            marker.bindPopup('<div class="info-box"><h3>' + distributeur.name + '</h3><img src="' + distributeur.photo + '" alt="Photo du distributeur"></div>');
-        });
+        let favorites = [];
+        let searchHistory = [];
+        let loyaltyPoints = 0;
+        let currentLanguage = 'fr';
+        let map;
+        let markers = [];
 
-        // Ajout d'un nouveau distributeur
-        var newMarker;
-        var distNameInput = document.getElementById('dist-name');
-        var distPhotoInput = document.getElementById('dist-photo');
-        var infoBox = document.getElementById('info-box');
-        var saveBtn = document.getElementById('saveDist');
-
-        document.getElementById('addDistributor').onclick = function() {
-            map.once('click', function(e) {
-                newMarker = L.marker([e.latlng.lat, e.latlng.lng], {icon: baguetteIcon}).addTo(map);
-                infoBox.style.display = 'block';
-            });
-        };
-
-        saveBtn.onclick = function() {
-            var name = distNameInput.value;
-            var photo = distPhotoInput.value;
-            if (name && photo) {
-                newMarker.bindPopup('<div class="info-box"><h3>' + name + '</h3><img src="' + photo + '" alt="Photo du distributeur"></div>').openPopup();
-                infoBox.style.display = 'none';
-                distNameInput.value = '';
-                distPhotoInput.value = '';
-            } else {
-                alert('Veuillez remplir tous les champs.');
+        const translations = {
+            fr: {
+                addReview: "Ajouter un avis",
+                seeReviews: "Voir les avis",
+                favorite: "Favori",
+                viewOnMap: "Voir sur la carte",
+                nearestDistributor: "Le distributeur le plus proche est",
+                meters: "mètres",
+                invalidInput: "Entrée invalide. Veuillez réessayer.",
+                loyaltyPoints: "Points de fidélité",
+                language: "Langue",
+                favorites: "Favoris",
+                searchHistory: "Historique de recherche",
+                available: "Disponible",
+                unavailable: "En panne",
+                empty: "Vide",
+                openInGoogleMaps: "Ouvrir dans Google Maps"
+            },
+            en: {
+                addReview: "Add review",
+                seeReviews: "See reviews",
+                favorite: "Favorite",
+                viewOnMap: "View on map",
+                nearestDistributor: "The nearest distributor is",
+                meters: "meters",
+                invalidInput: "Invalid input. Please try again.",
+                loyaltyPoints: "Loyalty points",
+                language: "Language",
+                favorites: "Favorites",
+                searchHistory: "Search history",
+                available: "Available",
+                unavailable: "Out of order",
+                empty: "Empty",
+                openInGoogleMaps: "Open in Google Maps"
             }
         };
+
+        function initMap() {
+            // Initialisation de la carte Leaflet
+            map = L.map('map').setView([48.8566, 2.3522], 12);
+
+            // Ajout des tuiles OpenStreetMap
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            // Ajout des marqueurs pour chaque distributeur
+            distributors.forEach(addMarker);
+        }
+
+        function addMarker(distributor) {
+            const marker = L.marker
+([distributor.lat, distributor.lng]).addTo(map)
+                .bindPopup(getDistributorContent(distributor));
+
+            markers.push(marker);
+        }
+
+        function getDistributorContent(distributor) {
+            return `
+                <div style="width: 200px;">
+                    <b>${distributor.name}</b><br>
+                    <img src="${distributor.photo}" alt="${distributor.name}" style="width: 100%; border-radius: 10px;">
+                    ${distributor.address}<br>
+                    Prix : ${distributor.price.toFixed(2)}€<br>
+                    Note : ${getStars(distributor.rating)}<br>
+                    Paiement : ${getPaymentIcons(distributor.payment)}<br>
+                    Statut : ${getStatusIcon(distributor.status)}<br>
+                    <button onclick="addReview(${distributor.id})">${translate('addReview')}</button>
+                    <button onclick="seeReviews(${distributor.id})">${translate('seeReviews')}</button>
+                    <a href="https://www.google.com/maps/search/?api=1&query=${distributor.lat},${distributor.lng}" target="_blank">${translate('openInGoogleMaps')}</a>
+                </div>
+            `;
+        }
+
+        function getStars(rating) {
+            return '<span class="stars">' + '★'.repeat(rating) + '☆'.repeat(5 - rating) + '</span>';
+        }
+
+        function getPaymentIcons(payment) {
+            const icons = {
+                cash: '<i class="fas fa-money-bill-alt" title="Espèces"></i>',
+                card: '<i class="fas fa-credit-card" title="Carte"></i>'
+            };
+            return payment.map(p => icons[p]).join(' ');
+        }
+
+        function getStatusIcon(status) {
+            const statusClasses = {
+                available: 'status-available',
+                unavailable: 'status-unavailable',
+                empty: 'status-empty'
+            };
+            const statusText = {
+                available: translate('available'),
+                unavailable: translate('unavailable'),
+                empty: translate('empty')
+            };
+            return `<span class="${statusClasses[status]}">${statusText[status]}</span>`;
+        }
+
+        function addReview(id) {
+            const review = prompt(translate('addReview'));
+            if (review) {
+                const distributor = distributors.find(d => d.id === id);
+                distributor.reviews.push(review);
+                alert("Avis ajouté avec succès !");
+            }
+        }
+
+        function seeReviews(id) {
+            const distributor = distributors.find(d => d.id === id);
+            if (distributor.reviews.length > 0) {
+                alert(distributor.reviews.join('\n'));
+            } else {
+                alert("Pas encore d'avis pour ce distributeur.");
+            }
+        }
+
+        function translate(key) {
+            return translations[currentLanguage][key];
+        }
+
+        document.getElementById('language-select').addEventListener('change', (e) => {
+            currentLanguage = e.target.value;
+            updateUI();
+        });
+
+        function updateUI() {
+            document.querySelectorAll('.distributor-item').forEach((item, index) => {
+                const distributor = distributors[index];
+                item.querySelector('.status').textContent = translate(distributor.status);
+            });
+        }
+
+        // Gestion des favoris
+        function toggleFavorite(id) {
+            const favoriteIndex = favorites.indexOf(id);
+            if (favoriteIndex === -1) {
+                favorites.push(id);
+            } else {
+                favorites.splice(favoriteIndex, 1);
+            }
+            updateFavorites();
+        }
+
+        function updateFavorites() {
+            const favoritesList = document.getElementById('favorites-list');
+            favoritesList.innerHTML = '';
+
+            favorites.forEach(favId => {
+                const distributor = distributors.find(d => d.id === favId);
+                const li = document.createElement('li');
+                li.textContent = distributor.name;
+                favoritesList.appendChild(li);
+            });
+        }
+
+        // Formulaire d'ajout de distributeur
+        document.getElementById('new-distributor-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const newDistributor = {
+                id: distributors.length + 1,
+                name: document.getElementById('new-name').value,
+                address: document.getElementById('new-address').value,
+                price: parseFloat(document.getElementById('new-price').value),
+                payment: Array.from(document.getElementById('new-payment').selectedOptions).map(option => option.value),
+                lat: 48.8566, // Valeur par défaut, pourrait être changée pour correspondre à l'adresse
+                lng: 2.3522, // Valeur par défaut
+                rating: 0,
+                reviews: [],
+                status: 'available',
+                photo: document.getElementById('new-photo').value // URL de la photo
+            };
+
+            distributors.push(newDistributor);
+            addMarker(newDistributor);
+            alert("Distributeur ajouté avec succès !");
+            document.getElementById('new-distributor-form').reset(); // Réinitialiser le formulaire
+        });
+
+        // Initialisation de la carte et des distributeurs
+        initMap();
     </script>
 </body>
 </html>
