@@ -13,7 +13,7 @@
             margin: 0;
             padding: 0;
             font-family: 'Open Dyslexic', Arial, sans-serif;
-            background-color: #BA9B61;
+            background-color: #D3B12A; /* Couleur de fond inspirée de la baguette */
         }
 
         @font-face {
@@ -30,18 +30,19 @@
 
         #sidebar {
             width: 400px;
-            background-color: #F5DEB3;
+            background-color: #F5DEB3; /* Couleur crème pour évoquer la baguette */
             padding: 20px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
+            box-shadow: 2px 2px 15px rgba(0, 0, 0, 0.3);
         }
 
         #preferences {
-            background-color: #FFEFD5;
+            background-color: #FFEFD5; /* Couleur douce */
             padding: 15px;
             border-radius: 15px;
-            border: 2px solid #D2691E;
+            border: 2px solid #D2691E; /* Marron clair */
             margin-bottom: 20px;
         }
 
@@ -61,15 +62,20 @@
         }
 
         .distributor-item {
-            background-color: #FFEFD5;
+            background-color: #FFEFD5; /* Couleur douce pour chaque distributeur */
             margin-bottom: 10px;
             padding: 15px;
             border-radius: 15px;
             border: 2px solid #D2691E;
+            transition: transform 0.2s;
+        }
+
+        .distributor-item:hover {
+            transform: scale(1.02); /* Effet d'agrandissement au survol */
         }
 
         .stars {
-            color: #FFD700;
+            color: #FFD700; /* Couleur des étoiles */
         }
 
         .favorite {
@@ -127,6 +133,7 @@
                         <option value="cash">Espèces</option>
                         <option value="card">Carte</option>
                     </select>
+                    <input type="text" id="new-photo" placeholder="URL de la photo" required>
                     <button type="submit">Soumettre pour modération</button>
                 </form>
             </div>
@@ -138,11 +145,13 @@
     </div>
 
     <script>
-        // Les données des distributeurs
+        // Les données des distributeurs avec des photos
         let distributors = [
-            { id: 1, name: "Distributeur Boulangerie Paul", lat: 48.8584, lng: 2.2945, address: "123 Rue de Paris", price: 1.20, rating: 4, payment: ["cash", "card"], reviews: [], status: "available" },
-            { id: 2, name: "Distri-Baguette Express", lat: 48.8738, lng: 2.2950, address: "45 Avenue des Champs-Élysées", price: 1.10, rating: 3, payment: ["cash"], reviews: [], status: "unavailable" },
-            { id: 3, name: "Le Petit Boulanger Automatique", lat: 48.8600, lng: 2.3400, address: "78 Boulevard Saint-Michel", price: 1.30, rating: 5, payment: ["card"], reviews: [], status: "empty" },
+            { id: 1, name: "Distributeur Boulangerie Paul", lat: 48.8584, lng: 2.2945, address: "123 Rue de Paris", price: 1.20, rating: 4, payment: ["cash", "card"], reviews: [], status: "available", photo: "https://via.placeholder.com/150" },
+            { id: 2, name: "Distri-Baguette Express", lat: 48.8738, lng: 2.2950, address: "45 Avenue des Champs-Élysées", price: 1.10, rating: 3, payment: ["cash"], reviews: [], status: "unavailable", photo: "https://via.placeholder.com/150" },
+            { id: 3, name: "Le Petit Boulanger Automatique", lat: 48.8600, lng: 2.3400, address: "78 Boulevard Saint-Michel", price: 1.30, rating: 5, payment: ["card"], reviews: [], status: "empty", photo: "https://via.placeholder.com/150" },
+            { id: 4, name: "Baguette d'Or", lat: 48.8566, lng: 2.3522, address: "5 Rue de Rivoli", price: 1.50, rating: 4, payment: ["cash"], reviews: [], status: "available", photo: "https://via.placeholder.com/150" },
+            { id: 5, name: "Boulangerie des Champs", lat: 48.8700, lng: 2.3300, address: "10 Rue des Filles du Calvaire", price: 1.00, rating: 5, payment: ["card"], reviews: [], status: "available", photo: "https://via.placeholder.com/150" }
         ];
 
         let favorites = [];
@@ -191,19 +200,8 @@
 
         function initMap() {
             // Initialisation de la carte Leaflet
-            map = L.map('map').setView([48.8566, 2.3522], 12);
-
-            // Ajout des tuiles OpenStreetMap
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            }).addTo(map);
-
-            // Ajout des marqueurs pour chaque distributeur
-            distributors.forEach(addMarker);
-        }
-
-        function addMarker(distributor) {
-            const marker = L.marker([distributor.lat, distributor.lng]).addTo(map)
+            map = L.map('map').setView
+([distributor.lat, distributor.lng]).addTo(map)
                 .bindPopup(getDistributorContent(distributor));
 
             markers.push(marker);
@@ -211,20 +209,23 @@
 
         function getDistributorContent(distributor) {
             return `
-                <b>${distributor.name}</b><br>
-                ${distributor.address}<br>
-                Prix : ${distributor.price.toFixed(2)}€<br>
-                Note : ${getStars(distributor.rating)}<br>
-                Paiement : ${getPaymentIcons(distributor.payment)}<br>
-                Statut : ${getStatusIcon(distributor.status)}<br>
-                <button onclick="addReview(${distributor.id})">${translate('addReview')}</button>
-                <button onclick="seeReviews(${distributor.id})">${translate('seeReviews')}</button>
-                <a href="https://www.google.com/maps/search/?api=1&query=${distributor.lat},${distributor.lng}" target="_blank">${translate('openInGoogleMaps')}</a>
+                <div style="width: 200px;">
+                    <b>${distributor.name}</b><br>
+                    <img src="${distributor.photo}" alt="${distributor.name}" style="width: 100%; border-radius: 10px;">
+                    ${distributor.address}<br>
+                    Prix : ${distributor.price.toFixed(2)}€<br>
+                    Note : ${getStars(distributor.rating)}<br>
+                    Paiement : ${getPaymentIcons(distributor.payment)}<br>
+                    Statut : ${getStatusIcon(distributor.status)}<br>
+                    <button onclick="addReview(${distributor.id})">${translate('addReview')}</button>
+                    <button onclick="seeReviews(${distributor.id})">${translate('seeReviews')}</button>
+                    <a href="https://www.google.com/maps/search/?api=1&query=${distributor.lat},${distributor.lng}" target="_blank">${translate('openInGoogleMaps')}</a>
+                </div>
             `;
         }
 
         function getStars(rating) {
-            return '<span class="stars">' + '★'.repeat(rating) + '☆'.repeat(5-rating) + '</span>';
+            return '<span class="stars">' + '★'.repeat(rating) + '☆'.repeat(5 - rating) + '</span>';
         }
 
         function getPaymentIcons(payment) {
@@ -234,6 +235,7 @@
             };
             return payment.map(p => icons[p]).join(' ');
         }
+
         function getStatusIcon(status) {
             const statusClasses = {
                 available: 'status-available',
@@ -319,12 +321,14 @@
                 lng: 2.3522, // Valeur par défaut
                 rating: 0,
                 reviews: [],
-                status: 'available'
+                status: 'available',
+                photo: document.getElementById('new-photo').value // URL de la photo
             };
 
             distributors.push(newDistributor);
             addMarker(newDistributor);
             alert("Distributeur ajouté avec succès !");
+            document.getElementById('new-distributor-form').reset(); // Réinitialiser le formulaire
         });
 
         // Initialisation de la carte et des distributeurs
