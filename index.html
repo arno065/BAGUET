@@ -90,19 +90,36 @@ body {
                 <p>Vos points : <span id="loyalty-points">0</span></p>
             </div>
             <div id="add-distributor-form">
-                <h3>Ajouter un nouveau distributeur</h3>
-                <form id="new-distributor-form">
-                    <input type="text" id="new-name" placeholder="Nom" required>
-                    <input type="text" id="new-address" placeholder="Adresse" required>
-                    <input type="number" id="new-price" step="0.01" placeholder="Prix" required>
-                    <select id="new-payment" multiple required>
-                        <option value="cash">Espèces</option>
-                        <option value="card">Carte</option>
-                    </select>
-                    <input type="text" id="new-photo" placeholder="URL de la photo" required>
-                    <button type="submit">Soumettre pour modération</button>
-                </form>
-            </div>
+    <h3>Ajouter un nouveau distributeur</h3>
+    <form id="new-distributor-form">
+        <input type="text" id="new-name" placeholder="Nom" required>
+        <input type="text" id="new-address" placeholder="Adresse" required>
+        <input type="number" id="new-price" step="0.01" placeholder="Prix" required>
+        <select id="new-payment" multiple required>
+            <option value="cash">Espèces</option>
+            <option value="card">Carte</option>
+        </select>
+        <input type="text" id="new-photo" placeholder="URL de la photo" required>
+        <select id="product-type" multiple required>
+            <option value="tradition">Baguette Tradition</option>
+            <option value="bio">Baguette Bio</option>
+            <option value="complet">Baguette Complète</option>
+            <!-- Ajoutez d'autres types de produits ici -->
+        </select>
+        <button type="submit">Soumettre pour modération</button>
+    </form>
+</div>
+<div id="filter-form">
+    <h3>Filtrer par type de produit</h3>
+    <select id="filter-product-type" multiple>
+        <option value="tradition">Baguette Tradition</option>
+        <option value="bio">Baguette Bio</option>
+        <option value="complet">Baguette Complète</option>
+        <!-- Ajoutez d'autres types de produits ici -->
+    </select>
+    <button onclick="filterDistributors()">Filtrer</button>
+</div>
+
             <div id="distributors-list"></div>
         </div>
         <div id="map-container">
@@ -246,6 +263,13 @@ body {
             }
         }
 
+        function filterDistributors() {
+            const selectedTypes = Array.from(document.getElementById('product-type').selectedOptions).map(option => option.value);
+            const filteredDistributors = distributors.filter(distributor => selectedTypes.includes(distributor.type));
+    // Mettez à jour l'affichage des distributeurs avec filteredDistributors
+        }
+
+        
         function translate(key) {
             return translations[currentLanguage][key];
         }
@@ -287,26 +311,28 @@ body {
 
         // Formulaire d'ajout de distributeur
         document.getElementById('new-distributor-form').addEventListener('submit', function (e) {
-            e.preventDefault();
+    e.preventDefault();
 
-            const newDistributor = {
-                id: distributors.length + 1,
-                name: document.getElementById('new-name').value,
-                address: document.getElementById('new-address').value,
-                price: parseFloat(document.getElementById('new-price').value),
-                payment: Array.from(document.getElementById('new-payment').selectedOptions).map(option => option.value),
-                photo: document.getElementById('new-photo').value,
-                rating: 0,
-                reviews: [],
-                status: "available", // Statut par défaut
-                lat: 48.8566 + (Math.random() - 0.5) * 0.5, // Position aléatoire autour de Paris
-                lng: 2.3522 + (Math.random() - 0.5) * 0.5
-            };
-            distributors.push(newDistributor);
-            alert(`Distributeur ${newDistributor.name} soumis pour modération !`);
-            this.reset(); // Réinitialiser le formulaire
-            initializeMap(); // Réinitialiser la carte pour inclure le nouveau distributeur
-        });
+    const newDistributor = {
+        id: distributors.length + 1,
+        name: document.getElementById('new-name').value,
+        address: document.getElementById('new-address').value,
+        price: parseFloat(document.getElementById('new-price').value),
+        payment: Array.from(document.getElementById('new-payment').selectedOptions).map(option => option.value),
+        photo: document.getElementById('new-photo').value,
+        type: Array.from(document.getElementById('product-type').selectedOptions).map(option => option.value),
+        rating: 0,
+        reviews: [],
+        status: "available", // Statut par défaut
+        lat: 48.8566 + (Math.random() - 0.5) * 0.5, // Position aléatoire autour de Paris
+        lng: 2.3522 + (Math.random() - 0.5) * 0.5
+    };
+    distributors.push(newDistributor);
+    alert(`Distributeur ${newDistributor.name} soumis pour modération !`);
+    this.reset(); // Réinitialiser le formulaire
+    initializeMap(); // Réinitialiser la carte pour inclure le nouveau distributeur
+});
+
 
         // Initialiser la carte après le chargement de la page
         document.addEventListener("DOMContentLoaded", function() {
