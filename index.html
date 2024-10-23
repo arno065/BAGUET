@@ -238,7 +238,9 @@ body {
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
-
+            const randomDistributors = generateRandomDistributors(50); // Générer 50 distributeurs aléatoires
+    randomDistributors.forEach(addMarker);
+}
             // Ajout des marqueurs pour chaque distributeur
             distributors.forEach(addMarker);
         }
@@ -292,6 +294,69 @@ body {
         distributorList.appendChild(listItem);
     });
 }
+                function generateRandomDistributors(num) {
+                    const distributorNames = [
+        "Boulangerie Artisanale",
+        "Le Fournil du Coin",
+        "Distributeur de Baguettes",
+        "Pain et Gourmandises",
+        "Baguette Express",
+        "La Boulangerie à Emporter",
+        "Le Pain Quotidien",
+        "Distri-Baguette",
+        "Les Délices de France",
+        "Boulangerie Française"
+    ];
+
+    const latitudes = [
+        48.8566,  // Paris
+        43.6047,  // Toulouse
+        48.5734,  // Strasbourg
+        45.7640,  // Lyon
+        44.8378,  // Bordeaux
+        48.1114,  // Rennes
+        43.2965,  // Marseille
+        47.2184,  // Nantes
+        50.6292,  // Lille
+        49.4431   // Rouen
+    ];
+
+    const longitudes = [
+        2.3522,   // Paris
+        1.4442,   // Toulouse
+        7.7521,   // Strasbourg
+        4.8357,   // Lyon
+        -0.5792,  // Bordeaux
+        -1.6794,  // Rennes
+        5.3698,   // Marseille
+        -1.5536,  // Nantes
+        3.0573,   // Lille
+        1.0993    // Rouen
+    ];
+
+    const distributors = [];
+    for (let i = 0; i < num; i++) {
+        const randomIndex = Math.floor(Math.random() * distributorNames.length);
+        const lat = latitudes[randomIndex] + (Math.random() - 0.5) * 0.5; // Variation aléatoire
+        const lng = longitudes[randomIndex] + (Math.random() - 0.5) * 0.5; // Variation aléatoire
+
+        distributors.push({
+            id: i + 1,
+            name: distributorNames[randomIndex],
+            lat: lat,
+            lng: lng,
+            address: `${Math.floor(Math.random() * 100)} Rue ${distributorNames[randomIndex]}`,
+            city: "Ville Aléatoire",
+            price: (Math.random() * 2 + 0.5).toFixed(2), // Prix entre 0.5 et 2.5
+            rating: Math.floor(Math.random() * 6), // Évaluation entre 0 et 5
+            payment: ["cash", "card"],
+            reviews: [],
+            status: "available",
+            photo: "https://via.placeholder.com/150"
+        });
+    }
+    return distributors;
+}
 
                 function getStars(rating) {
             return '<span class="stars">' + '★'.repeat(rating) + '☆'.repeat(5 - rating) + '</span>';
@@ -339,11 +404,10 @@ body {
         }
 
         function filterDistributors() {
-    const selectedTypes = Array.from(document.getElementById('filter-product-type').selectedOptions).map(option => option.value);
-    const filteredDistributors = distributors.filter(distributor => selectedTypes.some(type => distributor.type.includes(type)));
+            const selectedTypes = Array.from(document.getElementById('filter-product-type').selectedOptions).map(option => option.value);
+            const filteredDistributors = distributors.filter(distributor => selectedTypes.some(type => distributor.type.includes(type)));
     // Mettez à jour l'affichage des distributeurs avec filteredDistributors
 }
-
 
         
         function translate(key) {
