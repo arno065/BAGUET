@@ -8,14 +8,58 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <style>
-    body, html {
-        height: 100%;
-        margin: 0;
-        padding: 0;
-        font-family: 'Open Dyslexic', Arial, sans-serif;
-        background-color: #D3B12A; /* Couleur de fond inspirée de la baguette */
-    }
-    /* Ajoutez d'autres styles ici selon vos besoins */
+        body, html {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: 'Open Dyslexic', Arial, sans-serif;
+            background-color: #D3B12A; /* Couleur de fond inspirée de la baguette */
+        }
+        @font-face {
+            font-family: 'OpenDyslexic';
+            src: url('fonts/OpenDyslexic-Regular.woff2') format('woff2'),
+                 url('fonts/OpenDyslexic-Regular.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        body {
+            font-family: 'OpenDyslexic', sans-serif;
+        }
+        #app {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            border-radius: 15px; /* Arrondir les coins */
+            overflow: hidden; /* Pour éviter que le contenu dépasse les coins arrondis */
+        }
+        #sidebar {
+            width: 100%;
+            max-width: 400px;
+            background-color: #F5DEB3;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 2px 15px rgba(0, 0, 0, 0.3);
+            border-radius: 15px; /* Arrondir les coins */
+        }
+        #preferences {
+            background-color: #FFEFD5;
+            padding: 15px;
+            border-radius: 15px;
+            border: 2px solid #D2691E;
+            margin-bottom: 20px;
+        }
+        #map-container {
+            flex-grow: 1;
+            position: relative;
+            border-radius: 15px; /* Arrondir les coins */
+            overflow: hidden; /* Pour éviter que le contenu dépasse les coins arrondis */
+        }
+        #map {
+            height: 100%;
+            width: 100%;
+            border-radius: 15px; /* Arrondir les coins */
 
     .status-available {
         color: green;
