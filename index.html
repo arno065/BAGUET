@@ -25,11 +25,13 @@
 
         #app {
             display: flex;
+            flex-direction: column;
             height: 100%;
         }
 
         #sidebar {
-            width: 400px;
+            width: 100%;
+            max-width: 400px; /* Limiter la largeur sur les grands écrans */
             background-color: #F5DEB3; /* Couleur crème pour évoquer la baguette */
             padding: 20px;
             overflow-y: auto;
@@ -103,6 +105,36 @@
         #add-distributor-form select {
             width: 100%;
             margin-bottom: 10px;
+        }
+
+        /* Media queries for responsive design */
+        @media (max-width: 768px) {
+            #app {
+                flex-direction: column; /* Stack sidebar and map on smaller screens */
+            }
+
+            #sidebar {
+                max-width: 100%; /* Take full width on mobile */
+            }
+
+            #map-container {
+                height: 400px; /* Fixed height for map on mobile */
+            }
+        }
+
+        @media (max-width: 480px) {
+            #sidebar {
+                padding: 10px; /* Reduce padding on mobile */
+            }
+
+            .distributor-item {
+                padding: 10px; /* Reduce padding for items */
+            }
+
+            #add-distributor-form input,
+            #add-distributor-form select {
+                font-size: 14px; /* Adjust font size for input fields */
+            }
         }
     </style>
 </head>
@@ -180,7 +212,7 @@
                 openInGoogleMaps: "Ouvrir dans Google Maps"
             },
             en: {
-                addReview: "Add review",
+                addReview: "Add a review",
                 seeReviews: "See reviews",
                 favorite: "Favorite",
                 viewOnMap: "View on map",
@@ -192,159 +224,120 @@
                 favorites: "Favorites",
                 searchHistory: "Search history",
                 available: "Available",
-                unavailable: "Out of order",
+                unavailable: "Unavailable",
                 empty: "Empty",
                 openInGoogleMaps: "Open in Google Maps"
             }
         };
 
-        function initMap() {
-            // Initialisation de la carte Leaflet
-            map = L.map('map').setView([48.8566, 2.3522], 12);
+        function initializeMap() {
+            map = L.map('map').setView([48.8566, 2.3522], 12); // View centered on Paris
 
-            // Ajout des tuiles OpenStreetMap
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                maxZoom: 19,
+                attribution: '© OpenStreetMap'
             }).addTo(map);
 
-            // Ajout des marqueurs pour chaque distributeur
-            distributors.forEach(addMarker);
-        }
+            distributors.forEach(distributor => {
+                const marker = L.marker([distributor.lat, distributor.lng]).addTo(map);
+                markers.push(marker);
 
-        function addMarker(distributor) {
-            const marker = L.marker
-([distributor.lat, distributor.lng]).addTo(map)
-                .bindPopup(getDistributorContent(distributor));
-
-            markers.push(marker);
-        }
-
-        function getDistributorContent(distributor) {
-            return `
-                <div style="width: 200px;">
-                    <b>${distributor.name}</b><br>
-                    <img src="${distributor.photo}" alt="${distributor.name}" style="width: 100%; border-radius: 10px;">
-                    ${distributor.address}<br>
-                    Prix : ${distributor.price.toFixed(2)}€<br>
-                    Note : ${getStars(distributor.rating)}<br>
-                    Paiement : ${getPaymentIcons(distributor.payment)}<br>
-                    Statut : ${getStatusIcon(distributor.status)}<br>
-                    <button onclick="addReview(${distributor.id})">${translate('addReview')}</button>
-                    <button onclick="seeReviews(${distributor.id})">${translate('seeReviews')}</button>
-                    <a href="https://www.google.com/maps/search/?api=1&query=${distributor.lat},${distributor.lng}" target="_blank">${translate('openInGoogleMaps')}</a>
-                </div>
-            `;
-        }
-
-        function getStars(rating) {
-            return '<span class="stars">' + '★'.repeat(rating) + '☆'.repeat(5 - rating) + '</span>';
-        }
-
-        function getPaymentIcons(payment) {
-            const icons = {
-                cash: '<i class="fas fa-money-bill-alt" title="Espèces"></i>',
-                card: '<i class="fas fa-credit-card" title="Carte"></i>'
-            };
-            return payment.map(p => icons[p]).join(' ');
-        }
-
-        function getStatusIcon(status) {
-            const statusClasses = {
-                available: 'status-available',
-                unavailable: 'status-unavailable',
-                empty: 'status-empty'
-            };
-            const statusText = {
-                available: translate('available'),
-                unavailable: translate('unavailable'),
-                empty: translate('empty')
-            };
-            return `<span class="${statusClasses[status]}">${statusText[status]}</span>`;
-        }
-
-        function addReview(id) {
-            const review = prompt(translate('addReview'));
-            if (review) {
-                const distributor = distributors.find(d => d.id === id);
-                distributor.reviews.push(review);
-                alert("Avis ajouté avec succès !");
-            }
-        }
-
-        function seeReviews(id) {
-            const distributor = distributors.find(d => d.id === id);
-            if (distributor.reviews.length > 0) {
-                alert(distributor.reviews.join('\n'));
-            } else {
-                alert("Pas encore d'avis pour ce distributeur.");
-            }
-        }
-
-        function translate(key) {
-            return translations[currentLanguage][key];
-        }
-
-        document.getElementById('language-select').addEventListener('change', (e) => {
-            currentLanguage = e.target.value;
-            updateUI();
-        });
-
-        function updateUI() {
-            document.querySelectorAll('.distributor-item').forEach((item, index) => {
-                const distributor = distributors[index];
-                item.querySelector('.status').textContent = translate(distributor.status);
+                marker.on('click', () => {
+                    displayDistributorDetails(distributor);
+                });
             });
         }
 
-        // Gestion des favoris
+        function displayDistributorDetails(distributor) {
+            const distributorItem = document.createElement('div');
+            distributorItem.className = 'distributor-item';
+            distributorItem.innerHTML = `
+                <h4>${distributor.name}</h4>
+                <p>${distributor.address}</p>
+                <p>Prix: ${distributor.price} €</p>
+                <p class="stars">${'★'.repeat(distributor.rating)}${'☆'.repeat(5 - distributor.rating)}</p>
+                <p>Status: <span class="${distributor.status === 'available' ? 'status-available' : distributor.status === 'unavailable' ? 'status-unavailable' : 'status-empty'}">${translations[currentLanguage][distributor.status]}</span></p>
+                <button class="favorite" onclick="toggleFavorite(${distributor.id})">${translations[currentLanguage].favorite}</button>
+                <button onclick="openInGoogleMaps(${distributor.lat}, ${distributor.lng})">${translations[currentLanguage].openInGoogleMaps}</button>
+                <button onclick="showReviews(${distributor.id})">${translations[currentLanguage].seeReviews}</button>
+            `;
+            document.getElementById('distributors-list').appendChild(distributorItem);
+        }
+
         function toggleFavorite(id) {
-            const favoriteIndex = favorites.indexOf(id);
-            if (favoriteIndex === -1) {
+            const index = favorites.indexOf(id);
+            if (index === -1) {
                 favorites.push(id);
             } else {
-                favorites.splice(favoriteIndex, 1);
+                favorites.splice(index, 1);
             }
-            updateFavorites();
+            updateFavoritesList();
         }
 
-        function updateFavorites() {
+        function updateFavoritesList() {
             const favoritesList = document.getElementById('favorites-list');
             favoritesList.innerHTML = '';
-
-            favorites.forEach(favId => {
-                const distributor = distributors.find(d => d.id === favId);
-                const li = document.createElement('li');
-                li.textContent = distributor.name;
-                favoritesList.appendChild(li);
+            favorites.forEach(id => {
+                const distributor = distributors.find(d => d.id === id);
+                const item = document.createElement('li');
+                item.innerText = distributor.name;
+                favoritesList.appendChild(item);
             });
         }
 
-        // Formulaire d'ajout de distributeur
-        document.getElementById('new-distributor-form').addEventListener('submit', function (e) {
-            e.preventDefault();
+        function openInGoogleMaps(lat, lng) {
+            const url = `https://www.google.com/maps/@${lat},${lng},15z`;
+            window.open(url, '_blank');
+        }
 
+        function showReviews(id) {
+            const distributor = distributors.find(d => d.id === id);
+            const reviewText = prompt(translations[currentLanguage].addReview);
+            if (reviewText) {
+                distributor.reviews.push(reviewText);
+                alert('Review added!');
+            } else {
+                alert(translations[currentLanguage].invalidInput);
+            }
+        }
+
+        function addDistributor(event) {
+            event.preventDefault();
             const newDistributor = {
                 id: distributors.length + 1,
                 name: document.getElementById('new-name').value,
                 address: document.getElementById('new-address').value,
                 price: parseFloat(document.getElementById('new-price').value),
+                rating: 3, // Default rating
                 payment: Array.from(document.getElementById('new-payment').selectedOptions).map(option => option.value),
-                lat: 48.8566, // Valeur par défaut, pourrait être changée pour correspondre à l'adresse
-                lng: 2.3522, // Valeur par défaut
-                rating: 0,
                 reviews: [],
-                status: 'available',
-                photo: document.getElementById('new-photo').value // URL de la photo
+                status: "available",
+                photo: document.getElementById('new-photo').value,
+                lat: 48.8566, // Default lat, should be updated with geocoding
+                lng: 2.3522  // Default lng, should be updated with geocoding
             };
 
             distributors.push(newDistributor);
-            addMarker(newDistributor);
-            alert("Distributeur ajouté avec succès !");
-            document.getElementById('new-distributor-form').reset(); // Réinitialiser le formulaire
+            alert('Distributor submitted for moderation.');
+            document.getElementById('new-distributor-form').reset();
+            initializeMap();
+        }
+
+        document.getElementById('new-distributor-form').addEventListener('submit', addDistributor);
+        document.getElementById('language-select').addEventListener('change', function () {
+            currentLanguage = this.value;
+            updateTranslations();
         });
 
-        // Initialisation de la carte et des distributeurs
-        initMap();
+        function updateTranslations() {
+            // Update all translatable texts based on the selected language
+            document.getElementById('preferences').querySelector('h2').innerText = translations[currentLanguage].preferences;
+            document.getElementById('add-distributor-form').querySelector('h3').innerText = translations[currentLanguage].addDistributor;
+            // Add more translations for each element as needed
+            updateFavoritesList(); // Update favorites display
+        }
+
+        window.onload = initializeMap;
     </script>
 </body>
 </html>
