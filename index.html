@@ -179,83 +179,83 @@
 </body>
 </html>
         // Fonction pour afficher les détails du distributeur
-        function displayDistributorDetails(distributor) {
-            const distributorDetails = `
-                <h4>${distributor.name}</h4>
-                <p><strong>Adresse :</strong> ${distributor.address}</p>
-                <p><strong>Prix :</strong> €${distributor.price}</p>
-                <p><strong>Status :</strong> <span class="${distributor.status === 'available' ? 'status-available' : distributor.status === 'unavailable' ? 'status-unavailable' : 'status-empty'}">${translations[currentLanguage][distributor.status]}</span></p>
-                <p><strong>Évaluation :</strong> ${'★'.repeat(distributor.rating)}${'☆'.repeat(5 - distributor.rating)} (${distributor.rating})</p>
-                <button onclick="addToFavorites(${distributor.id})">${translations[currentLanguage].favorite}</button>
-                <button onclick="addReview(${distributor.id})">${translations[currentLanguage].addReview}</button>
-                <button onclick="openInGoogleMaps(${distributor.lat}, ${distributor.lng})">${translations[currentLanguage].openInGoogleMaps}</button>
-            `;
-            document.getElementById('distributors-list').innerHTML = distributorDetails;
-        }
+function displayDistributorDetails(distributor) {
+    const distributorDetails = `
+        <h3>${distributor.name}</h3>
+        <p>Adresse : ${distributor.address}</p>
+        <p>Prix : €${distributor.price}</p>
+        <p>Status : ${translations[currentLanguage][distributor.status]}</p>
+        <p>Évaluation : ${'★'.repeat(distributor.rating)}${'☆'.repeat(5 - distributor.rating)} (${distributor.rating})</p>
+        <button onclick="addToFavorites(${distributor.id})">${translations[currentLanguage].favorite}</button>
+        <button onclick="addReview(${distributor.id})">${translations[currentLanguage].addReview}</button>
+        <button onclick="openInGoogleMaps(${distributor.lat}, ${distributor.lng})">${translations[currentLanguage].openInGoogleMaps}</button>
+    `;
+    document.getElementById('distributors-list').innerHTML = distributorDetails;
+}
 
         // Ajouter un distributeur aux favoris
-        function addToFavorites(id) {
-            const distributor = distributors.find(d => d.id === id);
-            if (distributor && !favorites.includes(distributor)) {
-                favorites.push(distributor);
-                updateFavoritesList();
-                alert(`${distributor.name} ${translations[currentLanguage].favorite}`);
-            }
-        }
+function addToFavorites(id) {
+    const distributor = distributors.find(d => d.id === id);
+    if (distributor && !favorites.includes(distributor)) {
+        favorites.push(distributor);
+        updateFavoritesList();
+        alert(`${distributor.name} ${translations[currentLanguage].favorite}`);
+    }
+}
 
         // Mettre à jour la liste des favoris
-        function updateFavoritesList() {
-            const favoritesList = document.getElementById('favorites-list');
-            favoritesList.innerHTML = '';
-            favorites.forEach(fav => {
-                const listItem = document.createElement('li');
-                listItem.textContent = fav.name;
-                favoritesList.appendChild(listItem);
-            });
-        }
+function updateFavoritesList() {
+    const favoritesList = document.getElementById('favorites-list');
+    favoritesList.innerHTML = '';
+    favorites.forEach(fav => {
+        const listItem = document.createElement('li');
+        listItem.textContent = fav.name;
+        favoritesList.appendChild(listItem);
+    });
+}
 
-        // Ajouter un avis
-        function addReview(id) {
-            const review = prompt(translations[currentLanguage].seeReviews);
-            if (review) {
-                const distributor = distributors.find(d => d.id === id);
-                distributor.reviews.push(review);
-                alert(`${translations[currentLanguage].seeReviews}: ${review}`);
+// Ajouter un avis
+function addReview(id) {
+    const review = prompt(translations[currentLanguage].seeReviews);
+    if (review) {
+        const distributor = distributors.find(d => d.id === id);
+        distributor.reviews.push(review);
+        alert(`${translations[currentLanguage].seeReviews}: ${review}`);
             }
         }
 
         // Ouvrir dans Google Maps
-        function openInGoogleMaps(lat, lng) {
-            window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank');
-        }
+function openInGoogleMaps(lat, lng) {
+    window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank');
+}
 
-        // Gestion des soumissions de formulaire
-        document.getElementById('new-distributor-form').addEventListener('submit', function (event) {
-            event.preventDefault();
-            const newDistributor = {
-                id: distributors.length + 1,
-                name: document.getElementById('new-name').value,
-                address: document.getElementById('new-address').value,
-                price: document.getElementById('new-price').value,
-                payment: Array.from(document.getElementById('new-payment').selectedOptions).map(option => option.value),
-                photo: document.getElementById('new-photo').value,
-                rating: 0,
-                reviews: [],
-                status: "available", // Statut par défaut
-                lat: 48.8566 + (Math.random() - 0.5) * 0.5, // Position aléatoire autour de Paris
-                lng: 2.3522 + (Math.random() - 0.5) * 0.5
-            };
+// Gestion des soumissions de formulaire
+document.getElementById('new-distributor-form').addEventListener('submit', function (event) {
+    event.preventDefault();
+    const newDistributor = {
+        id: distributors.length + 1,
+        name: document.getElementById('new-name').value,
+        address: document.getElementById('new-address').value,
+        price: document.getElementById('new-price').value,
+        payment: Array.from(document.getElementById('new-payment').selectedOptions).map(option => option.value),
+        photo: document.getElementById('new-photo').value,
+        rating: 0,
+        reviews: [],
+        status: "available", // Statut par défaut
+        lat: 48.8566 + (Math.random() - 0.5) * 0.5, // Position aléatoire autour de Paris
+        lng: 2.3522 + (Math.random() - 0.5) * 0.5
+    };
             distributors.push(newDistributor);
-            alert(`Distributeur ${newDistributor.name} soumis pour modération !`);
-            this.reset(); // Réinitialiser le formulaire
-            initializeMap(); // Réinitialiser la carte pour inclure le nouveau distributeur
-        });
+    alert(`Distributeur ${newDistributor.name} soumis pour modération !`);
+    this.reset(); // Réinitialiser le formulaire
+    initializeMap(); // Réinitialiser la carte pour inclure le nouveau distributeur
+});
 
-        // Initialiser la carte après le chargement de la page
-        document.addEventListener("DOMContentLoaded", function() {
-            initializeMap();
-            updateFavoritesList();
-        });
+// Initialiser la carte après le chargement de la page
+document.addEventListener("DOMContentLoaded", function() {
+    initializeMap();
+    updateFavoritesList();
+});
 
     </script>
 </body>
