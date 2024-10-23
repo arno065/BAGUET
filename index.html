@@ -253,21 +253,22 @@ body {
         }
 
         function getDistributorContent(distributor) {
-            return `
-                <div style="width: 200px;">
-                    <b>${distributor.name}</b><br>
-                    <img src="${distributor.photo}" alt="${distributor.name}" style="width: 100%; border-radius: 10px;">
-                    ${distributor.address}<br>
-                    Prix : ${distributor.price.toFixed(2)}€<br>
-                    Note : ${getStars(distributor.rating)}<br>
-                    Paiement : ${getPaymentIcons(distributor.payment)}<br>
-                    Statut : ${getStatusIcon(distributor.status)}<br>
-                    <button onclick="addReview(${distributor.id})">${translate('addReview')}</button>
-                    <button onclick="seeReviews(${distributor.id})">${translate('seeReviews')}</button>
-                    <a href="https://www.google.com/maps/search/?api=1&query=${distributor.lat},${distributor.lng}" target="_blank">${translate('openInGoogleMaps')}</a>
-                </div>
-            `;
-        }
+    return `
+        <div style="width: 200px;">
+            <b>${distributor.name}</b><br>
+            <img src="${distributor.photo}" alt="${distributor.name}" style="width: 100%; border-radius: 10px;">
+            ${distributor.address}<br>
+            Prix : ${distributor.price}€<br>
+            Note : ${getStars(distributor.rating)}<br>
+            Paiement : ${getPaymentIcons(distributor.payment)}<br>
+            Statut : ${getStatusIcon(distributor.status)}<br>
+            <button onclick="addReview(${distributor.id})">${translate('addReview')}</button>
+            <button onclick="seeReviews(${distributor.id})">${translate('seeReviews')}</button>
+            <a href="https://www.google.com/maps/search/?api=1&query=${distributor.lat},${distributor.lng}" target="_blank">${translate('openInGoogleMaps')}</a>
+        </div>
+    `;
+}
+
                 function advancedSearch() {
                      const query = document.getElementById('search-query').value.toLowerCase();
                      const filteredDistributors = distributors.filter(distributor => 
