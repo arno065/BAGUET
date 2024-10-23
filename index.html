@@ -16,11 +16,17 @@
             background-color: #D3B12A; /* Couleur de fond inspirée de la baguette */
         }
         @font-face {
-            font-family: 'Open Dyslexic';
-            src: url('https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.4/open-dyslexic-regular.woff2') format('woff2');
-            font-weight: normal;
-            font-style: normal;
-        }
+    font-family: 'OpenDyslexic';
+    src: url('fonts/OpenDyslexic-Regular.woff2') format('woff2'),
+         url('fonts/OpenDyslexic-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+body {
+    font-family: 'OpenDyslexic', sans-serif;
+}
+
         #app {
             display: flex;
             flex-direction: column;
