@@ -395,13 +395,6 @@ body {
     }
 }
 
-function updateReviewsUI(distributor) {
-    const reviewContainer = document.getElementById('reviews-container');
-    reviewContainer.innerHTML = distributor.reviews.map(review => `<p>${review}</p>`).join('');
-}
-
-// Dans ton HTML
-<div id="reviews-container"></div>
 
         function seeReviews(id) {
             const distributor = distributors.find(d => d.id === id);
