@@ -386,13 +386,22 @@ body {
 
 
         function addReview(id) {
-            const review = prompt(translate('addReview'));
-            if (review) {
-                const distributor = distributors.find(d => d.id === id);
-                distributor.reviews.push(review);
-                alert("Avis ajouté avec succès !");
-            }
-        }
+    const review = prompt(translate('addReview'));
+    if (review) {
+        const distributor = distributors.find(d => d.id === id);
+        distributor.reviews.push(review);
+        updateReviewsUI(distributor);
+        alert("Avis ajouté avec succès !");
+    }
+}
+
+function updateReviewsUI(distributor) {
+    const reviewContainer = document.getElementById('reviews-container');
+    reviewContainer.innerHTML = distributor.reviews.map(review => `<p>${review}</p>`).join('');
+}
+
+// Dans ton HTML
+<div id="reviews-container"></div>
 
         function seeReviews(id) {
             const distributor = distributors.find(d => d.id === id);
